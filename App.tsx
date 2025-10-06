@@ -28,31 +28,56 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   header: {
     backgroundColor: colors.primary,
-    padding: 20,
+    padding: 15,
+    paddingTop: 10,
     alignItems: "center",
-    paddingTop: 40, // Extra padding to center the logo better
+    minHeight: 180,
   },
   logoContainer: {
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 5,
   },
   logo: {
-    width: 300, // Adjust size as needed
-    height: 300, // Adjust size as needed
+    width: 300,
+    height: 150,
     resizeMode: "contain",
-  },
-  headerTitle: {
-    color: colors.white,
-    fontSize: 24,
-    fontWeight: "bold",
-    marginTop: 5, // Space between logo and title
-  },
-  headerSubtitle: {
-    color: colors.white,
-    fontSize: 16,
     marginTop: 5,
   },
+  culinaryImage: {
+    width: "100%",
+    height: 200,
+    resizeMode: "cover",
+  },
+  dishOfTheDaySection: {
+    padding: 20,
+    alignItems: "center",
+  },
+  dishOfTheDayTitle: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: colors.primary,
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  dishOfTheDaySubtitle: {
+    fontSize: 16,
+    color: colors.text,
+    marginBottom: 20,
+    textAlign: "center",
+  },
   card: {
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    padding: 20,
+    margin: 15,
+    marginTop: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  categoryCard: {
     backgroundColor: colors.white,
     borderRadius: 12,
     padding: 16,
@@ -68,9 +93,13 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 8,
     alignItems: "center",
-    margin: 10,
+    marginHorizontal: 15,
+    marginTop: 10,
+    marginBottom: 30, // Added bottom margin to ensure space above phone buttons
   },
-  buttonSecondary: { backgroundColor: colors.secondary },
+  buttonContainer: {
+    paddingBottom: 40, // Extra padding to push content up
+  },
   buttonText: { color: colors.white, fontSize: 16, fontWeight: "bold" },
   input: {
     borderWidth: 1,
@@ -82,40 +111,80 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   dishName: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: "bold",
-    color: colors.text,
-    marginBottom: 5,
+    color: colors.primary,
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  categoryTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: colors.primary,
+    marginBottom: 15,
+    textAlign: "center",
   },
   description: {
     color: colors.text,
-    marginBottom: 8,
-    lineHeight: 20,
-    fontSize: 14,
+    marginBottom: 15,
+    lineHeight: 22,
+    fontSize: 16,
+    textAlign: "center",
   },
-  price: { fontSize: 16, fontWeight: "bold", color: colors.primary },
-  statsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    padding: 15,
-    backgroundColor: colors.white,
-    margin: 10,
-    borderRadius: 8,
+  price: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: colors.secondary,
+    textAlign: "center",
+    marginTop: 10,
   },
-  statItem: { alignItems: "center" },
-  statValue: { fontSize: 20, fontWeight: "bold", color: colors.primary },
-  statLabel: { fontSize: 12, color: colors.text, marginTop: 4 },
-  buttonRow: { flexDirection: "row", padding: 10 },
-  halfButton: { flex: 1, margin: 5 },
   courseTag: {
     backgroundColor: colors.secondary,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-    alignSelf: "flex-start",
-    marginBottom: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    alignSelf: "center",
+    marginBottom: 10,
   },
-  courseTagText: { color: colors.white, fontSize: 12, fontWeight: "bold" },
+  courseTagText: { color: colors.white, fontSize: 14, fontWeight: "bold" },
+  contentContainer: {
+    flex: 1,
+  },
+  menuItem: {
+    backgroundColor: colors.background,
+    padding: 12,
+    borderRadius: 8,
+    marginVertical: 5,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.primary,
+  },
+  menuItemName: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: colors.text,
+    marginBottom: 4,
+  },
+  menuItemDescription: {
+    fontSize: 14,
+    color: colors.text,
+    marginBottom: 4,
+  },
+  menuItemPrice: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: colors.secondary,
+  },
+  emptyState: {
+    textAlign: "center",
+    color: colors.text,
+    fontSize: 16,
+    fontStyle: "italic",
+    marginVertical: 20,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 20, // Padding to ensure content doesn't get cut off
+  },
 });
 
 type Course = "Starters" | "Mains" | "Desserts";
@@ -129,91 +198,139 @@ interface MenuItem {
 }
 
 const HomeScreen = ({ navigation, menuItems, onAddMenuItem }: any) => {
-  const addSampleItems = () => {
-    const samples: Omit<MenuItem, "id">[] = [
-      {
-        dishName: "Catfish Étouffée",
-        description:
-          "Succulent catfish fillets smothered in a rich, savory Cajun roux with onions, peppers, and celery, slow-simmered in Creole spice, and served over fluffy white rice. A Louisiana classic bursting with bold Southern flavors.",
-        course: "Mains",
-        price: 399,
-      },
-      {
-        dishName: "Spring Salad",
-        description:
-          "Fresh mixed greens with seasonal vegetables and house dressing",
-        course: "Starters",
-        price: 120,
-      },
-      {
-        dishName: "Chocolate Lava Cake",
-        description:
-          "Warm chocolate cake with molten center, served with vanilla ice cream",
-        course: "Desserts",
-        price: 95,
-      },
-    ];
-    samples.forEach((item) => onAddMenuItem(item));
-    Alert.alert("Success", "Sample menu items added!");
+  // Select the first item as "Dish of the Day" or show a default
+  const dishOfTheDay = menuItems.length > 0 ? menuItems[0] : null;
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <View style={styles.logoContainer}>
+          <Image source={require("./assets/logo.png")} style={styles.logo} />
+        </View>
+        {/* REMOVED: Text components for "Dine Smart" and "CULINARY EXPERIENCE" */}
+      </View>
+
+      {/* Culinary Experience Image */}
+      <Image
+        source={require("./assets/culinaryExperience.jpeg")}
+        style={styles.culinaryImage}
+      />
+
+      <View style={styles.contentContainer}>
+        {/* Dish of the Day Section */}
+        <View style={styles.dishOfTheDaySection}>
+          <Text style={styles.dishOfTheDayTitle}>Dish of the Day</Text>
+          <Text style={styles.dishOfTheDaySubtitle}>
+            Today's specially curated culinary delight
+          </Text>
+        </View>
+
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {!dishOfTheDay ? (
+            <View style={styles.card}>
+              <Text style={styles.dishName}>No Dish of the Day Selected</Text>
+              <Text style={[styles.description, { textAlign: "center" }]}>
+                Add a dish to feature it as today's special!
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.card}>
+              <View style={styles.courseTag}>
+                <Text style={styles.courseTagText}>{dishOfTheDay.course}</Text>
+              </View>
+              <Text style={styles.dishName}>{dishOfTheDay.dishName}</Text>
+              <Text style={styles.description}>{dishOfTheDay.description}</Text>
+              <Text style={styles.price}>R{dishOfTheDay.price.toFixed(2)}</Text>
+            </View>
+          )}
+        </ScrollView>
+
+        {/* Single See Menu Button */}
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => navigation.navigate("MenuCategories")}
+          >
+            <Text style={styles.buttonText}>See Menu</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+};
+
+const MenuCategoriesScreen = ({ navigation, menuItems }: any) => {
+  const categories: Course[] = ["Starters", "Mains", "Desserts"];
+
+  const getDishesByCategory = (category: Course) => {
+    return menuItems.filter((item: MenuItem) => item.course === category);
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.logoContainer}>
-          <Image
-            source={require("./assets/logo.png")} // Path to your logo
-            style={styles.logo}
-          />
+          <Image source={require("./assets/logo.png")} style={styles.logo} />
         </View>
-        <Text style={styles.headerTitle}>Dine Smart</Text>
-        <Text style={styles.headerSubtitle}>CULINARY EXPERIENCE</Text>
+        <Text style={styles.headerTitle}>Our Menu</Text>
+        <Text style={styles.headerSubtitle}>
+          Discover our culinary offerings
+        </Text>
       </View>
 
-      <View style={styles.statsContainer}>
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>{menuItems.length}</Text>
-          <Text style={styles.statLabel}>Total Items</Text>
-        </View>
-      </View>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <View style={{ padding: 10 }}>
+          {categories.map((category) => {
+            const categoryDishes = getDishesByCategory(category);
 
-      <ScrollView style={{ flex: 1 }}>
-        {menuItems.length === 0 ? (
-          <View style={styles.card}>
-            <Text
-              style={{ textAlign: "center", color: colors.text, fontSize: 16 }}
-            >
-              No menu items yet. Add some dishes to get started!
-            </Text>
-          </View>
-        ) : (
-          menuItems.map((item: MenuItem) => (
-            <View key={item.id} style={styles.card}>
-              <View style={styles.courseTag}>
-                <Text style={styles.courseTagText}>{item.course}</Text>
+            return (
+              <View key={category} style={styles.categoryCard}>
+                <Text style={styles.categoryTitle}>{category}</Text>
+
+                {categoryDishes.length === 0 ? (
+                  <Text style={styles.emptyState}>
+                    No {category.toLowerCase()} added yet
+                  </Text>
+                ) : (
+                  categoryDishes.map((item: MenuItem) => (
+                    <View key={item.id} style={styles.menuItem}>
+                      <Text style={styles.menuItemName}>{item.dishName}</Text>
+                      <Text style={styles.menuItemDescription}>
+                        {item.description}
+                      </Text>
+                      <Text style={styles.menuItemPrice}>
+                        R{item.price.toFixed(2)}
+                      </Text>
+                    </View>
+                  ))
+                )}
               </View>
-              <Text style={styles.dishName}>{item.dishName}</Text>
-              <Text style={styles.description}>{item.description}</Text>
-              <Text style={styles.price}>R{item.price.toFixed(2)}</Text>
-            </View>
-          ))
-        )}
-      </ScrollView>
+            );
+          })}
+        </View>
 
-      <View style={styles.buttonRow}>
-        <TouchableOpacity
-          style={[styles.button, styles.halfButton]}
-          onPress={() => navigation.navigate("Add")}
-        >
-          <Text style={styles.buttonText}>Add New Dish</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.button, styles.halfButton, styles.buttonSecondary]}
-          onPress={addSampleItems}
-        >
-          <Text style={styles.buttonText}>Add Samples</Text>
-        </TouchableOpacity>
-      </View>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: colors.secondary }]}
+            onPress={() => navigation.navigate("Add")}
+          >
+            <Text style={styles.buttonText}>Add New Dish</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: "#666" }]}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.buttonText}>Back to Home</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -252,17 +369,14 @@ const AddScreen = ({ navigation, onAddMenuItem }: any) => {
     });
 
     Alert.alert("Success", "Dish added to menu!");
-    navigation.goBack();
+    navigation.navigate("MenuCategories");
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.logoContainer}>
-          <Image
-            source={require("./assets/logo.png")} // Path to your logo
-            style={styles.logo}
-          />
+          <Image source={require("./assets/logo.png")} style={styles.logo} />
         </View>
         <Text style={styles.headerTitle}>Add New Dish</Text>
         <Text style={styles.headerSubtitle}>
@@ -270,82 +384,89 @@ const AddScreen = ({ navigation, onAddMenuItem }: any) => {
         </Text>
       </View>
 
-      <ScrollView style={{ padding: 10 }}>
-        <TextInput
-          style={styles.input}
-          placeholder="Dish Name"
-          value={dishName}
-          onChangeText={setDishName}
-          placeholderTextColor="#999"
-        />
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <View style={{ padding: 10 }}>
+          <TextInput
+            style={styles.input}
+            placeholder="Dish Name"
+            value={dishName}
+            onChangeText={setDishName}
+            placeholderTextColor="#999"
+          />
 
-        <TextInput
-          style={[styles.input, { height: 100 }]}
-          placeholder="Description"
-          multiline
-          value={description}
-          onChangeText={setDescription}
-          placeholderTextColor="#999"
-        />
+          <TextInput
+            style={[styles.input, { height: 100 }]}
+            placeholder="Description"
+            multiline
+            value={description}
+            onChangeText={setDescription}
+            placeholderTextColor="#999"
+          />
 
-        <Text
-          style={{
-            fontSize: 16,
-            fontWeight: "600",
-            marginBottom: 8,
-            color: colors.text,
-          }}
-        >
-          Select Course:
-        </Text>
-        <View style={{ flexDirection: "row", marginVertical: 10 }}>
-          {(["Starters", "Mains", "Desserts"] as Course[]).map((crse) => (
-            <TouchableOpacity
-              key={crse}
-              style={{
-                flex: 1,
-                padding: 12,
-                margin: 5,
-                borderRadius: 8,
-                borderWidth: 1,
-                borderColor: course === crse ? colors.primary : colors.border,
-                backgroundColor:
-                  course === crse ? colors.primary : colors.white,
-                alignItems: "center",
-              }}
-              onPress={() => setCourse(crse)}
-            >
-              <Text
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: "600",
+              marginBottom: 8,
+              color: colors.text,
+            }}
+          >
+            Select Course:
+          </Text>
+          <View style={{ flexDirection: "row", marginVertical: 10 }}>
+            {(["Starters", "Mains", "Desserts"] as Course[]).map((crse) => (
+              <TouchableOpacity
+                key={crse}
                 style={{
-                  color: course === crse ? colors.white : colors.text,
-                  fontWeight: "500",
+                  flex: 1,
+                  padding: 12,
+                  margin: 5,
+                  borderRadius: 8,
+                  borderWidth: 1,
+                  borderColor: course === crse ? colors.primary : colors.border,
+                  backgroundColor:
+                    course === crse ? colors.primary : colors.white,
+                  alignItems: "center",
                 }}
+                onPress={() => setCourse(crse)}
               >
-                {crse}
-              </Text>
-            </TouchableOpacity>
-          ))}
+                <Text
+                  style={{
+                    color: course === crse ? colors.white : colors.text,
+                    fontWeight: "500",
+                  }}
+                >
+                  {crse}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <TextInput
+            style={styles.input}
+            placeholder="Price (e.g., 399)"
+            keyboardType="numeric"
+            value={price}
+            onChangeText={setPrice}
+            placeholderTextColor="#999"
+          />
         </View>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Price (e.g., 399)"
-          keyboardType="numeric"
-          value={price}
-          onChangeText={setPrice}
-          placeholderTextColor="#999"
-        />
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.button} onPress={addItem}>
+            <Text style={styles.buttonText}>Add Dish to Menu</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity style={styles.button} onPress={addItem}>
-          <Text style={styles.buttonText}>Add Dish to Menu</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.button, { backgroundColor: "#666" }]}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.buttonText}>Cancel</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: "#666" }]}
+            onPress={() => navigation.navigate("MenuCategories")}
+          >
+            <Text style={styles.buttonText}>Back to Menu</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -371,7 +492,7 @@ export default function App() {
           headerTitleStyle: { fontWeight: "bold" },
         }}
       >
-        <Stack.Screen name="Home" options={{ title: "Dine Smart - Menu" }}>
+        <Stack.Screen name="Home" options={{ title: "Dine Smart" }}>
           {(props) => (
             <HomeScreen
               {...props}
@@ -379,6 +500,12 @@ export default function App() {
               onAddMenuItem={addMenuItem}
             />
           )}
+        </Stack.Screen>
+        <Stack.Screen
+          name="MenuCategories"
+          options={{ title: "Menu Categories" }}
+        >
+          {(props) => <MenuCategoriesScreen {...props} menuItems={menuItems} />}
         </Stack.Screen>
         <Stack.Screen name="Add" options={{ title: "Add New Dish" }}>
           {(props) => <AddScreen {...props} onAddMenuItem={addMenuItem} />}
