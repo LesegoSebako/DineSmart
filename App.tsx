@@ -11,21 +11,32 @@ import {
   Alert,
   SafeAreaView,
   Image,
+  StatusBar,
 } from "react-native";
 
 const Stack = createNativeStackNavigator();
 
 const colors = {
   primary: "#2D5A3D",
+  primaryLight: "#4CAF50",
   secondary: "#8B4513",
-  background: "#F5F5F5",
+  secondaryLight: "#A0522D",
+  background: "#F8F9FA",
   white: "#FFFFFF",
-  text: "#333333",
+  text: "#2C3E50",
+  textLight: "#7F8C8D",
   border: "#E0E0E0",
+  success: "#27AE60",
+  danger: "#E74C3C",
+  warning: "#F39C12",
+  info: "#3498DB",
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
   header: {
     backgroundColor: colors.primary,
     padding: 15,
@@ -95,10 +106,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginHorizontal: 15,
     marginTop: 10,
-    marginBottom: 30, // Added bottom margin to ensure space above phone buttons
+    marginBottom: 30,
   },
   buttonContainer: {
-    paddingBottom: 40, // Extra padding to push content up
+    paddingBottom: 40,
   },
   buttonText: { color: colors.white, fontSize: 16, fontWeight: "bold" },
   input: {
@@ -116,6 +127,13 @@ const styles = StyleSheet.create({
     color: colors.primary,
     marginBottom: 10,
     textAlign: "center",
+  },
+  dishNameOnly: {
+    fontSize: 32,
+    fontWeight: "bold",
+    color: colors.primary,
+    textAlign: "center",
+    marginTop: 10,
   },
   categoryTitle: {
     fontSize: 24,
@@ -158,6 +176,10 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
     borderLeftColor: colors.primary,
   },
+  menuItemSelected: {
+    backgroundColor: "#E8F5E8",
+    borderLeftColor: colors.success,
+  },
   menuItemName: {
     fontSize: 16,
     fontWeight: "bold",
@@ -183,7 +205,46 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: 20, // Padding to ensure content doesn't get cut off
+    paddingBottom: 20,
+  },
+  actionButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 10,
+  },
+  selectButton: {
+    backgroundColor: colors.success,
+    padding: 8,
+    borderRadius: 6,
+    flex: 1,
+    marginRight: 5,
+    alignItems: "center",
+  },
+  deleteButton: {
+    backgroundColor: colors.danger,
+    padding: 8,
+    borderRadius: 6,
+    flex: 1,
+    marginLeft: 5,
+    alignItems: "center",
+  },
+  actionButtonText: {
+    color: colors.white,
+    fontSize: 12,
+    fontWeight: "bold",
+  },
+  selectedBadge: {
+    backgroundColor: colors.success,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    alignSelf: "center",
+    marginBottom: 5,
+  },
+  selectedBadgeText: {
+    color: colors.white,
+    fontSize: 10,
+    fontWeight: "bold",
   },
 });
 
@@ -197,27 +258,99 @@ interface MenuItem {
   price: number;
 }
 
-const HomeScreen = ({ navigation, menuItems, onAddMenuItem }: any) => {
-  // Select the first item as "Dish of the Day" or show a default
-  const dishOfTheDay = menuItems.length > 0 ? menuItems[0] : null;
+// Sample dishes data
+const sampleDishes: Omit<MenuItem, "id">[] = [
+  // Starters
+  {
+    dishName: "Truffle Arancini",
+    description:
+      "Crispy risotto balls filled with wild mushrooms and truffle oil, served with parmesan cream sauce",
+    course: "Starters",
+    price: 145,
+  },
+  {
+    dishName: "Beef Carpaccio",
+    description:
+      "Thinly sliced prime beef with capers, arugula, shaved parmesan, and truffle aioli",
+    course: "Starters",
+    price: 165,
+  },
+  {
+    dishName: "Burrata Caprese",
+    description:
+      "Creamy burrata cheese with heirloom tomatoes, fresh basil, and aged balsamic reduction",
+    course: "Starters",
+    price: 125,
+  },
+  // Mains
+  {
+    dishName: "Wagyu Beef Burger",
+    description:
+      "Prime wagyu beef patty with smoked gouda, caramelized onions, truffle aioli on brioche bun",
+    course: "Mains",
+    price: 285,
+  },
+  {
+    dishName: "Lobster Thermidor",
+    description:
+      "Fresh lobster baked with brandy cream sauce, gruyère cheese, and herb breadcrumbs",
+    course: "Mains",
+    price: 425,
+  },
+  {
+    dishName: "Duck Confit",
+    description:
+      "Slow-cooked duck leg with garlic potatoes, roasted vegetables, and cherry port reduction",
+    course: "Mains",
+    price: 320,
+  },
+  // Desserts
+  {
+    dishName: "Chocolate Soufflé",
+    description:
+      "Warm dark chocolate soufflé with vanilla bean ice cream and chocolate sauce",
+    course: "Desserts",
+    price: 95,
+  },
+  {
+    dishName: "Crème Brûlée",
+    description:
+      "Classic vanilla bean custard with caramelized sugar crust and fresh berries",
+    course: "Desserts",
+    price: 85,
+  },
+  {
+    dishName: "Tiramisu",
+    description:
+      "Layers of espresso-soaked ladyfingers with mascarpone cream and cocoa dusting",
+    course: "Desserts",
+    price: 75,
+  },
+];
 
+const HomeScreen = ({
+  navigation,
+  menuItems,
+  dishOfTheDay,
+  onSetDishOfTheDay,
+}: any) => {
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar backgroundColor={colors.primary} barStyle="light-content" />
+
       <View style={styles.header}>
         <View style={styles.logoContainer}>
           <Image source={require("./assets/logo.png")} style={styles.logo} />
         </View>
-        {/* REMOVED: Text components for "Dine Smart" and "CULINARY EXPERIENCE" */}
+        {/* Text components removed */}
       </View>
 
-      {/* Culinary Experience Image */}
       <Image
         source={require("./assets/culinaryExperience.jpeg")}
         style={styles.culinaryImage}
       />
 
       <View style={styles.contentContainer}>
-        {/* Dish of the Day Section */}
         <View style={styles.dishOfTheDaySection}>
           <Text style={styles.dishOfTheDayTitle}>Dish of the Day</Text>
           <Text style={styles.dishOfTheDaySubtitle}>
@@ -233,22 +366,16 @@ const HomeScreen = ({ navigation, menuItems, onAddMenuItem }: any) => {
             <View style={styles.card}>
               <Text style={styles.dishName}>No Dish of the Day Selected</Text>
               <Text style={[styles.description, { textAlign: "center" }]}>
-                Add a dish to feature it as today's special!
+                Select a dish from the menu to feature it as today's special!
               </Text>
             </View>
           ) : (
             <View style={styles.card}>
-              <View style={styles.courseTag}>
-                <Text style={styles.courseTagText}>{dishOfTheDay.course}</Text>
-              </View>
-              <Text style={styles.dishName}>{dishOfTheDay.dishName}</Text>
-              <Text style={styles.description}>{dishOfTheDay.description}</Text>
-              <Text style={styles.price}>R{dishOfTheDay.price.toFixed(2)}</Text>
+              <Text style={styles.dishNameOnly}>{dishOfTheDay.dishName}</Text>
             </View>
           )}
         </ScrollView>
 
-        {/* Single See Menu Button */}
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.button}
@@ -262,23 +389,54 @@ const HomeScreen = ({ navigation, menuItems, onAddMenuItem }: any) => {
   );
 };
 
-const MenuCategoriesScreen = ({ navigation, menuItems }: any) => {
+const MenuCategoriesScreen = ({
+  navigation,
+  menuItems,
+  dishOfTheDay,
+  onSetDishOfTheDay,
+  onDeleteMenuItem,
+}: any) => {
   const categories: Course[] = ["Starters", "Mains", "Desserts"];
 
   const getDishesByCategory = (category: Course) => {
     return menuItems.filter((item: MenuItem) => item.course === category);
   };
 
+  const handleSelectDish = (item: MenuItem) => {
+    onSetDishOfTheDay(item);
+    Alert.alert("Success", `${item.dishName} is now the Dish of the Day!`);
+  };
+
+  const handleDeleteDish = (item: MenuItem) => {
+    Alert.alert(
+      "Delete Dish",
+      `Are you sure you want to delete "${item.dishName}"?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            onDeleteMenuItem(item.id);
+            Alert.alert(
+              "Deleted",
+              `${item.dishName} has been removed from the menu.`
+            );
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar backgroundColor={colors.primary} barStyle="light-content" />
+
       <View style={styles.header}>
         <View style={styles.logoContainer}>
           <Image source={require("./assets/logo.png")} style={styles.logo} />
         </View>
-        <Text style={styles.headerTitle}>Our Menu</Text>
-        <Text style={styles.headerSubtitle}>
-          Discover our culinary offerings
-        </Text>
+        {/* Text components removed */}
       </View>
 
       <ScrollView
@@ -299,7 +457,20 @@ const MenuCategoriesScreen = ({ navigation, menuItems }: any) => {
                   </Text>
                 ) : (
                   categoryDishes.map((item: MenuItem) => (
-                    <View key={item.id} style={styles.menuItem}>
+                    <View
+                      key={item.id}
+                      style={[
+                        styles.menuItem,
+                        dishOfTheDay?.id === item.id && styles.menuItemSelected,
+                      ]}
+                    >
+                      {dishOfTheDay?.id === item.id && (
+                        <View style={styles.selectedBadge}>
+                          <Text style={styles.selectedBadgeText}>
+                            DISH OF THE DAY
+                          </Text>
+                        </View>
+                      )}
                       <Text style={styles.menuItemName}>{item.dishName}</Text>
                       <Text style={styles.menuItemDescription}>
                         {item.description}
@@ -307,6 +478,26 @@ const MenuCategoriesScreen = ({ navigation, menuItems }: any) => {
                       <Text style={styles.menuItemPrice}>
                         R{item.price.toFixed(2)}
                       </Text>
+
+                      <View style={styles.actionButtons}>
+                        <TouchableOpacity
+                          style={styles.selectButton}
+                          onPress={() => handleSelectDish(item)}
+                        >
+                          <Text style={styles.actionButtonText}>
+                            {dishOfTheDay?.id === item.id
+                              ? "Selected"
+                              : "Select as Dish of Day"}
+                          </Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={styles.deleteButton}
+                          onPress={() => handleDeleteDish(item)}
+                        >
+                          <Text style={styles.actionButtonText}>Delete</Text>
+                        </TouchableOpacity>
+                      </View>
                     </View>
                   ))
                 )}
@@ -374,14 +565,13 @@ const AddScreen = ({ navigation, onAddMenuItem }: any) => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar backgroundColor={colors.primary} barStyle="light-content" />
+
       <View style={styles.header}>
         <View style={styles.logoContainer}>
           <Image source={require("./assets/logo.png")} style={styles.logo} />
         </View>
-        <Text style={styles.headerTitle}>Add New Dish</Text>
-        <Text style={styles.headerSubtitle}>
-          Create your culinary masterpiece
-        </Text>
+        {/* Text components removed */}
       </View>
 
       <ScrollView
@@ -474,6 +664,20 @@ const AddScreen = ({ navigation, onAddMenuItem }: any) => {
 
 export default function App() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [dishOfTheDay, setDishOfTheDay] = useState<MenuItem | null>(null);
+
+  // Add sample dishes on first load
+  React.useEffect(() => {
+    if (menuItems.length === 0) {
+      sampleDishes.forEach((dish) => {
+        const newItem: MenuItem = {
+          ...dish,
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        };
+        setMenuItems((prev) => [...prev, newItem]);
+      });
+    }
+  }, []);
 
   const addMenuItem = (item: Omit<MenuItem, "id">) => {
     const newItem: MenuItem = {
@@ -481,6 +685,17 @@ export default function App() {
       id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
     };
     setMenuItems((prev) => [...prev, newItem]);
+  };
+
+  const deleteMenuItem = (id: string) => {
+    setMenuItems((prev) => prev.filter((item) => item.id !== id));
+    if (dishOfTheDay?.id === id) {
+      setDishOfTheDay(null);
+    }
+  };
+
+  const setDishOfTheDayHandler = (item: MenuItem) => {
+    setDishOfTheDay(item);
   };
 
   return (
@@ -492,12 +707,13 @@ export default function App() {
           headerTitleStyle: { fontWeight: "bold" },
         }}
       >
-        <Stack.Screen name="Home" options={{ title: "Dine Smart" }}>
+        <Stack.Screen name="Home" options={{ title: "Dine Smart - Menu" }}>
           {(props) => (
             <HomeScreen
               {...props}
               menuItems={menuItems}
-              onAddMenuItem={addMenuItem}
+              dishOfTheDay={dishOfTheDay}
+              onSetDishOfTheDay={setDishOfTheDayHandler}
             />
           )}
         </Stack.Screen>
@@ -505,7 +721,15 @@ export default function App() {
           name="MenuCategories"
           options={{ title: "Menu Categories" }}
         >
-          {(props) => <MenuCategoriesScreen {...props} menuItems={menuItems} />}
+          {(props) => (
+            <MenuCategoriesScreen
+              {...props}
+              menuItems={menuItems}
+              dishOfTheDay={dishOfTheDay}
+              onSetDishOfTheDay={setDishOfTheDayHandler}
+              onDeleteMenuItem={deleteMenuItem}
+            />
+          )}
         </Stack.Screen>
         <Stack.Screen name="Add" options={{ title: "Add New Dish" }}>
           {(props) => <AddScreen {...props} onAddMenuItem={addMenuItem} />}
