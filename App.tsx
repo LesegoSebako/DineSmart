@@ -88,6 +88,20 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  insightsCard: {
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    padding: 20,
+    margin: 15,
+    marginTop: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.info,
+  },
   categoryCard: {
     backgroundColor: colors.white,
     borderRadius: 12,
@@ -106,10 +120,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginHorizontal: 15,
     marginTop: 10,
-    marginBottom: 30,
+    marginBottom: 20, // Reduced from 30 to 20
   },
   buttonContainer: {
-    paddingBottom: 40,
+    paddingBottom: 20, // Reduced from 40 to 20
   },
   buttonText: { color: colors.white, fontSize: 16, fontWeight: "bold" },
   input: {
@@ -134,11 +148,19 @@ const styles = StyleSheet.create({
     color: colors.primary,
     textAlign: "center",
     marginTop: 10,
+    marginBottom: 10, // Added margin for better spacing
   },
   categoryTitle: {
     fontSize: 24,
     fontWeight: "bold",
     color: colors.primary,
+    marginBottom: 15,
+    textAlign: "center",
+  },
+  insightsTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: colors.info,
     marginBottom: 15,
     textAlign: "center",
   },
@@ -205,7 +227,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: 20,
+    paddingBottom: 10, // Reduced from 20 to 10
   },
   actionButtons: {
     flexDirection: "row",
@@ -245,6 +267,40 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: 10,
     fontWeight: "bold",
+  },
+  insightsContainer: {
+    marginTop: 10,
+  },
+  insightsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  insightsCategory: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.text,
+    flex: 1,
+  },
+  insightsStats: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.text,
+    textAlign: "right",
+    flex: 1,
+  },
+  insightsTotal: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: colors.primary,
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 2,
+    borderTopColor: colors.border,
+    textAlign: "center",
   },
 });
 
@@ -334,6 +390,43 @@ const HomeScreen = ({
   dishOfTheDay,
   onSetDishOfTheDay,
 }: any) => {
+  // Calculate operational insights
+  const calculateInsights = () => {
+    const totalItems = menuItems.length;
+
+    const starters = menuItems.filter((item) => item.course === "Starters");
+    const mains = menuItems.filter((item) => item.course === "Mains");
+    const desserts = menuItems.filter((item) => item.course === "Desserts");
+
+    const avgStarters =
+      starters.length > 0
+        ? starters.reduce((sum, item) => sum + item.price, 0) / starters.length
+        : 0;
+
+    const avgMains =
+      mains.length > 0
+        ? mains.reduce((sum, item) => sum + item.price, 0) / mains.length
+        : 0;
+
+    const avgDesserts =
+      desserts.length > 0
+        ? desserts.reduce((sum, item) => sum + item.price, 0) / desserts.length
+        : 0;
+
+    const totalValue = menuItems.reduce((sum, item) => sum + item.price, 0);
+    const overallAvg = totalItems > 0 ? totalValue / totalItems : 0;
+
+    return {
+      totalItems,
+      starters: { count: starters.length, avgPrice: avgStarters },
+      mains: { count: mains.length, avgPrice: avgMains },
+      desserts: { count: desserts.length, avgPrice: avgDesserts },
+      overallAvg,
+    };
+  };
+
+  const insights = calculateInsights();
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor={colors.primary} barStyle="light-content" />
@@ -361,6 +454,7 @@ const HomeScreen = ({
         <ScrollView
           style={{ flex: 1 }}
           contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
         >
           {!dishOfTheDay ? (
             <View style={styles.card}>
@@ -374,6 +468,53 @@ const HomeScreen = ({
               <Text style={styles.dishNameOnly}>{dishOfTheDay.dishName}</Text>
             </View>
           )}
+
+          {/* Operational Insights Card */}
+          <View style={styles.insightsCard}>
+            <Text style={styles.insightsTitle}>Operational Insights</Text>
+            <Text
+              style={[
+                styles.description,
+                { textAlign: "center", marginBottom: 15 },
+              ]}
+            >
+              Total menu items and average pricing by course
+            </Text>
+
+            <View style={styles.insightsContainer}>
+              <View style={styles.insightsRow}>
+                <Text style={styles.insightsCategory}>Starters:</Text>
+                <Text style={styles.insightsStats}>
+                  {insights.starters.count} items • Avg: R
+                  {insights.starters.avgPrice.toFixed(2)}
+                </Text>
+              </View>
+
+              <View style={styles.insightsRow}>
+                <Text style={styles.insightsCategory}>Mains:</Text>
+                <Text style={styles.insightsStats}>
+                  {insights.mains.count} items • Avg: R
+                  {insights.mains.avgPrice.toFixed(2)}
+                </Text>
+              </View>
+
+              <View style={styles.insightsRow}>
+                <Text style={styles.insightsCategory}>Desserts:</Text>
+                <Text style={styles.insightsStats}>
+                  {insights.desserts.count} items • Avg: R
+                  {insights.desserts.avgPrice.toFixed(2)}
+                </Text>
+              </View>
+
+              <Text style={styles.insightsTotal}>
+                Total: {insights.totalItems} items • Overall Avg: R
+                {insights.overallAvg.toFixed(2)}
+              </Text>
+            </View>
+          </View>
+
+          {/* Add some extra space at the bottom of the scroll view */}
+          <View style={{ height: 20 }} />
         </ScrollView>
 
         <View style={styles.buttonContainer}>
